@@ -114,10 +114,10 @@ function update() {
 
 
     //add---
-    if ( (Math.abs(Math.abs(100-(median(pitchArray)-50))*(600/(150-50)) - p1.y)))
+    if ( (Math.abs(Math.abs(200-(median(pitchArray)-50))*(600/(250-50)) - p1.y)))
     {
-        p1.y = Math.abs(100-(median(pitchArray)-50))*(600/(150-50));
-        player.position.y = Math.abs(100-(median(pitchArray)-50))*(600/(150-50));
+        p1.y = Math.abs(200-(median(pitchArray)-50))*(600/(250-50));
+        player.position.y = Math.abs(200-(median(pitchArray)-50))*(600/(250-50));
     }
     //add---
 
@@ -277,7 +277,7 @@ function centsOffFromPitch(frequency, note) {
 }
 
 function autoCorrelate(buf, sampleRate) {
-    var MIN_SAMPLES = 4; // corresponds to an 11kHz signal
+    var MIN_SAMPLES = 20; // corresponds to an 11kHz signal
     var MAX_SAMPLES = 1000; // corresponds to a 44Hz signal
     var SIZE = 1000;
     var best_offset = -1;
@@ -312,7 +312,7 @@ function autoCorrelate(buf, sampleRate) {
             best_offset = offset;
         }
     }
-    if ((rms > 0.1) && (best_correlation > 0.01)) {
+    if ((rms > 0.01) && (best_correlation > 0.01)) {
         confidence = (second_best_correlation-best_correlation) * rms * 10000;
         currentPitch = sampleRate / best_offset;
 
