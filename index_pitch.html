@@ -19,9 +19,11 @@ var game = new Phaser.Game(800, 600, Phaser.CANVAS, '', { preload: preload, crea
 function preload() {
 
     game.stage.backgroundColor = "CDE5FF";
-	game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
+	game.load.spritesheet('dude', 'assets/stickman.png', 64, 128);
     game.load.image('land_1', 'assets/land_1.png');
-    game.load.image('land_2', 'assets/land_2.png');
+    game.load.image('land_2', 'assets/land_black.png');
+
+    game.load.image("background", "assets/background_extend.png");
 
 }
 
@@ -38,7 +40,7 @@ var lose = 'YOU   LOSE';
 var lose_style = {font: "65px Arial", fill: "#ff0044", align: "center"};
 var index_text;
 var height_text;
-var movespeed = 5;
+var movespeed = 8;
 var bump_step = 5;
 var bump_height = 5;
 var trumble_step = 5;
@@ -48,21 +50,36 @@ var next_gene_ground = 240; // index
 var next_ground = 50;        // index
 var space_width = 100;        // index
 
+var hard_update = 1200;
+var height_range = 400;
+var width_range = 40;
+var width_update = 1500;
+var y = 100;
+var next_judge = next_gene_ground;
+
 var movespeed_arr = new Array(5, 10, 20, 25);
 
+var backgroundImg;
 
 
 
 //add---
-var p1;
+var nextYPosition;
+var pointPathArray;
+var pointPathArrayNowIndex;
+
+var game_screen_width = 800;
+var game_screen_height = 600;
 //add---
 
 function create() {
 
+    backgroundImg = game.add.tileSprite(0, 0, game_screen_width, game_screen_height, 'background');
+
     game.world.setBounds(0, 0, 5000000, 600);
-    player = game.add.sprite(50, 500, 'dude');
+    player = game.add.sprite(50, 520, 'dude');
     player.anchor.setTo(0.5, 1);
-    player.animations.add('right', [5, 6, 7, 8], 10, true);
+    player.animations.add('right', [2, 3, 4, 5, 6, 7], 10, true);
     player.animations.play('right');
     ground = game.add.group();
 
@@ -77,7 +94,13 @@ function create() {
 
     //add---
     toggleLiveInput();
-    p1 = new Phaser.Point(50, player.position.y);
+    nextYPosition = player.position.y-20;
+
+    pointPathArrayNowIndex = game_screen_width/2-1;
+    pointPathArray = new Array();
+    for (var i = 0; i < game_screen_width/2; i++) {
+        pointPathArray[i] = new Phaser.Point(i, game_screen_height+1);
+    }
     //add---
 }
 
@@ -85,11 +108,33 @@ function create() {
 
 function update() {
 
+    //add---
+    var nowPitch = (median(pitchArray));
+    if (nowPitch >= 40 && nowPitch <=1000) {
+        console.log('sig'+sigmoid(nowPitch - lastPitch));
+        nextYPosition = nextYPosition - sigmoid(nowPitch - lastPitch);
+        //player.position.y = player.position.y - sigmoid(nowPitch - lastPitch);
+        lastPitch = nowPitch;
+        //p1.y = Math.abs(200-(median(pitchArray)-50))*(600/(250-50));
+        //player.position.y = Math.abs(200-(median(pitchArray)-50))*(600/(250-50));
+    }
+
+    if (ground_height[ground_now + 70] == 0) {
+        ground_height[ground_now + 70] = nextYPosition;
+        pointPathArray[pointPathArrayNowIndex].y = nextYPosition - 20;
+    }
+    //add---
+
     if (alive){
+        backgroundImg.tilePosition.x -= 2;
+
         compute_fall();
- //      falling();
- //       bumping();
- //       trumbling();
+        falling();
+        if(ground_now == next_judge){
+            bumping();
+           trumbling();
+        }
+
         ground.position.x -= 5 ;
         ground_now++;
         if(ground_now == 100000)
@@ -112,28 +157,29 @@ function update() {
         create_ground();
     }
 
-
-    //add---
-    if ( (Math.abs(Math.abs(200-(median(pitchArray)-50))*(600/(250-50)) - p1.y)))
-    {
-        var nowPitch = (median(pitchArray));
-        console.log('sig'+sigmoid(nowPitch - lastPitch));
-        p1.y = p1.y - sigmoid(nowPitch - lastPitch);
-        player.position.y = player.position.y - sigmoid(nowPitch - lastPitch);
-        lastPitch = nowPitch;
-        //p1.y = Math.abs(200-(median(pitchArray)-50))*(600/(250-50));
-        //player.position.y = Math.abs(200-(median(pitchArray)-50))*(600/(250-50));
+    if(ground_now == width_update && space_width >= 40){
+        space_width -= 5;
+        width_update += 1500;
     }
-    //add---
 
+    if(ground_now == hard_update){
+        height_range += 40;
+        hard_update += 1200;
+    }
 }
 
 
 function render(){
 
     //add---
-    game.context.fillStyle = 'rgb(255,0,0)';
-    game.context.fillRect(p1.x, p1.y, 8, 8);
+    for (var i = 0; i < game_screen_width/2; i++) {
+        game.context.fillStyle = 'rgb(255,0,0)';
+        game.context.fillRect(pointPathArray[i].x, pointPathArray[i].y, 8, 8);
+
+        if (i != game_screen_width/2-1) {
+            pointPathArray[i].y = pointPathArray[i+1].y;
+        }
+    }
     //add---
 
 }
@@ -160,7 +206,7 @@ function fall_down(){
 }
 
 function bumping(){
-    if(ground_height[bump_step]-ground_height[ground_now] > bump_height){
+    if(ground_height[ground_now-1]-ground_height[ground_now] > bump_height){
         alive = false;
         game.time.events.repeat(1, 10, rot_back, this);
     }
@@ -171,7 +217,7 @@ function rot_back(){
 }
 
 function trumbling(){
-    if(ground_height[ground_now]-ground_height[trumble_step] > trumble_height){
+    if(ground_height[ground_now]-ground_height[ground_now-1] > trumble_height){
         alive = false;
         game.time.events.repeat(1, 10, rot_front, this);
     }
@@ -184,7 +230,15 @@ function rot_front(){
 
 
 function create_ground(){
-    var y = game.world.randomY;
+
+    y += Math.round((Math.random()-0.5)* height_range);
+    if(y>500)
+        y=500;
+    if(y<20)
+        y=20;
+
+    var space_w =  Math.round((Math.random()-0.5)*width_range + space_width);
+    next_judge = next_gene_ground;
     ground.create(next_gene_ground*movespeed, 600-y, 'land_2');
 
     var len = 1000/movespeed;
@@ -373,7 +427,7 @@ function median(array) {
 }
 
 function sigmoid(t) {
-    return ( (1/(1+Math.exp(-t))) - 0.5 ) * 20;
+    return ( (1/(1+Math.exp(-t))) - 0.5 ) * 30;
 }
 
 </script>
