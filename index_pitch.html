@@ -24,6 +24,7 @@ function preload() {
     game.load.image('land_2', 'assets/land_black.png');
 
     game.load.image("background", "assets/background_extend.png");
+    game.load.image("pencil", "assets/pencil.png");
 
 }
 
@@ -66,7 +67,7 @@ var backgroundImg;
 //add---
 var nextYPosition;
 var pointPathArray;
-var pointPathArrayNowIndex;
+var pointPathArrayLastIndex;
 
 var game_screen_width = 800;
 var game_screen_height = 600;
@@ -84,9 +85,9 @@ function create() {
     ground = game.add.group();
 
     ground.create(-2200, 500, 'land_1');
-    for(var i=0;i<150;i++)
+    for(var i=0;i<100;i++)
         ground_height[i] = 100;
-    for(var i=150;i<100000;i++)
+    for(var i=100;i<100000;i++)
         ground_height[i] = 0;
 
     index_text = game.add.text(10, 10, ground_now);
@@ -96,11 +97,13 @@ function create() {
     toggleLiveInput();
     nextYPosition = player.position.y-20;
 
-    pointPathArrayNowIndex = game_screen_width/2-1;
+    pointPathArrayLastIndex = parseInt(game_screen_width/2);
     pointPathArray = new Array();
-    for (var i = 0; i < game_screen_width/2; i++) {
+    for (var i = 0; i <= pointPathArrayLastIndex; i++) {
         pointPathArray[i] = new Phaser.Point(i, game_screen_height+1);
     }
+
+    pencil = game.add.sprite(pointPathArrayLastIndex+10, nextYPosition-20, 'pencil');
     //add---
 }
 
@@ -119,23 +122,44 @@ function update() {
         //player.position.y = Math.abs(200-(median(pitchArray)-50))*(600/(250-50));
     }
 
-    if (ground_height[ground_now + 70] == 0) {
-        ground_height[ground_now + 70] = nextYPosition;
-        pointPathArray[pointPathArrayNowIndex].y = nextYPosition - 20;
+    pencil.position.y = nextYPosition-20;
+
+    //if (ground_height[ground_now]) {
+        //console.log('ground:' + ground_height[ground_now]);
+    //}
+
+    if (ground_height[ground_now + 51] == 0) {
+        //console.log('ground:' + ground_now);
+        ground_height[ground_now + 51] = game_screen_height - nextYPosition;
+        pointPathArray[pointPathArrayLastIndex].y = nextYPosition;
+
+        if (pointPathArray[pointPathArrayLastIndex - movespeed].y != game_screen_height+1) {
+            var step = Math.round( (pointPathArray[pointPathArrayLastIndex-movespeed].y - pointPathArray[pointPathArrayLastIndex].y)/8 );
+            for (var i = pointPathArrayLastIndex-movespeed+1; i < pointPathArrayLastIndex; i++) {
+                pointPathArray[i].y = pointPathArray[i-1].y + step;
+            }
+        }
+    }
+    else {
+        for (var i = pointPathArrayLastIndex-movespeed; i<=pointPathArrayLastIndex; i++) {
+            pointPathArray[i].y = game_screen_height + 1;
+        }
     }
     //add---
 
     if (alive){
+        player.position.y = (game_screen_height - ground_height[ground_now])+20;
+
         backgroundImg.tilePosition.x -= 2;
 
-        compute_fall();
-        falling();
+        //compute_fall();
+        //falling();
         if(ground_now == next_judge){
-            bumping();
-           trumbling();
+            //bumping();
+            //trumbling();
         }
 
-        ground.position.x -= 5 ;
+        ground.position.x -= movespeed ;
         ground_now++;
         if(ground_now == 100000)
             ground_now = 0;
@@ -172,12 +196,12 @@ function update() {
 function render(){
 
     //add---
-    for (var i = 0; i < game_screen_width/2; i++) {
+    for (var i = 0; i <= pointPathArrayLastIndex; i++) {
         game.context.fillStyle = 'rgb(255,0,0)';
         game.context.fillRect(pointPathArray[i].x, pointPathArray[i].y, 8, 8);
 
-        if (i != game_screen_width/2-1) {
-            pointPathArray[i].y = pointPathArray[i+1].y;
+        if (i+movespeed <= pointPathArrayLastIndex) {
+            pointPathArray[i].y = pointPathArray[i+movespeed].y;
         }
     }
     //add---
