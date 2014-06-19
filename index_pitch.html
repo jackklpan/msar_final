@@ -43,9 +43,9 @@ var index_text;
 var height_text;
 var movespeed = 8;
 var bump_step = 5;
-var bump_height = 5;
+var bump_height = 15;
 var trumble_step = 5;
-var trumble_height = 5;
+var trumble_height = 15;
 
 var next_gene_ground = 240; // index
 var next_ground = 50;        // index
@@ -154,10 +154,9 @@ function update() {
 
         //compute_fall();
         //falling();
-        if(ground_now == next_judge){
-            //bumping();
-            //trumbling();
-        }
+        bumping();
+        trumbling();
+    
 
         ground.position.x -= movespeed ;
         ground_now++;
@@ -230,7 +229,7 @@ function fall_down(){
 }
 
 function bumping(){
-    if(ground_height[ground_now-1]-ground_height[ground_now] > bump_height){
+    if(ground_height[ground_now+8]-ground_height[ground_now+7] > bump_height){
         alive = false;
         game.time.events.repeat(1, 10, rot_back, this);
     }
@@ -241,7 +240,7 @@ function rot_back(){
 }
 
 function trumbling(){
-    if(ground_height[ground_now]-ground_height[ground_now-1] > trumble_height){
+    if(ground_height[ground_now-1]-ground_height[ground_now] > trumble_height){
         alive = false;
         game.time.events.repeat(1, 10, rot_front, this);
     }
@@ -270,10 +269,10 @@ function create_ground(){
         ground_height[i+next_gene_ground] = y;
     }
 
-    next_ground += space_width+1000/movespeed;
+    next_ground += space_w+1000/movespeed;
     if(next_ground >= 100000)
         next_ground -= 100000;
-    next_gene_ground += space_width+1000/movespeed;
+    next_gene_ground += space_w+1000/movespeed;
 
 }
 
