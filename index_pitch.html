@@ -43,9 +43,9 @@ var index_text;
 var height_text;
 var movespeed = 8;
 var bump_step = 5;
-var bump_height = 15;
+var bump_height = 50;
 var trumble_step = 5;
-var trumble_height = 15;
+var trumble_height = 50;
 
 var next_gene_ground = 240; // index
 var next_ground = 50;        // index
@@ -97,7 +97,7 @@ function create() {
     toggleLiveInput();
     nextYPosition = player.position.y-20;
 
-    pointPathArrayLastIndex = parseInt(game_screen_width/2);
+    pointPathArrayLastIndex = parseInt(game_screen_width/2 - 100);
     pointPathArray = new Array();
     for (var i = 0; i <= pointPathArrayLastIndex; i++) {
         pointPathArray[i] = new Phaser.Point(i, game_screen_height+1);
@@ -128,9 +128,9 @@ function update() {
         //console.log('ground:' + ground_height[ground_now]);
     //}
 
-    if (ground_height[ground_now + 51] == 0) {
+    if (ground_height[ground_now + 39] == 0) {
         //console.log('ground:' + ground_now);
-        ground_height[ground_now + 51] = game_screen_height - nextYPosition;
+        ground_height[ground_now + 39] = game_screen_height - nextYPosition;
         pointPathArray[pointPathArrayLastIndex].y = nextYPosition;
 
         if (pointPathArray[pointPathArrayLastIndex - movespeed].y != game_screen_height+1) {
@@ -156,7 +156,7 @@ function update() {
         //falling();
         bumping();
         trumbling();
-    
+
 
         ground.position.x -= movespeed ;
         ground_now++;
@@ -199,7 +199,7 @@ function render(){
         game.context.fillStyle = 'rgb(255,0,0)';
         game.context.fillRect(pointPathArray[i].x, pointPathArray[i].y, 8, 8);
 
-        if (i+movespeed <= pointPathArrayLastIndex) {
+        if (alive && i+movespeed <= pointPathArrayLastIndex) {
             pointPathArray[i].y = pointPathArray[i+movespeed].y;
         }
     }
