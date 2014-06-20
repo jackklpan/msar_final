@@ -134,7 +134,7 @@ function update() {
         pointPathArray[pointPathArrayLastIndex].y = nextYPosition;
 
         if (pointPathArray[pointPathArrayLastIndex - movespeed].y != game_screen_height+1) {
-            var step = Math.round( (pointPathArray[pointPathArrayLastIndex-movespeed].y - pointPathArray[pointPathArrayLastIndex].y)/8 );
+            var step = Math.round( (pointPathArray[pointPathArrayLastIndex].y - pointPathArray[pointPathArrayLastIndex-movespeed].y)/7 );
             for (var i = pointPathArrayLastIndex-movespeed+1; i < pointPathArrayLastIndex; i++) {
                 pointPathArray[i].y = pointPathArray[i-1].y + step;
             }
@@ -148,7 +148,7 @@ function update() {
     //add---
 
     if (alive){
-        player.position.y = (game_screen_height - ground_height[ground_now])+20;
+        player.position.y = (game_screen_height - ground_height[ground_now+5])+20;
 
         backgroundImg.tilePosition.x -= 2;
 
@@ -450,7 +450,7 @@ function median(array) {
 }
 
 function sigmoid(t) {
-    return ( (1/(1+Math.exp(-t))) - 0.5 ) * 30;
+    return ( (1/(1+Math.exp(-0.5*t))) - 0.5 ) * 30;
 }
 
 </script>
