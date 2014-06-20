@@ -9,6 +9,7 @@
             margin: 0;
         }
     </style>
+	<script src="//www.parsecdn.com/js/parse-1.2.18.min.js"></script>
 </head>
 <body>
 
@@ -17,7 +18,8 @@
 var game = new Phaser.Game(800, 600, Phaser.CANVAS, '', { preload: preload, create: create, update: update, render: render});
 
 function preload() {
-
+	Parse.initialize("7ZMknJKFbf3s2xdp21dOGjAyYDp8lAniOoUrVTtD", "alkpxbQxrDqSEKGtwzkUXvSNHWjTIDtKMnc6qla9");
+	
     game.stage.backgroundColor = "CDE5FF";
 	game.load.spritesheet('dude', 'assets/stickman.png', 64, 128);
     game.load.image('land_1', 'assets/land_1.png');
@@ -71,6 +73,8 @@ var pointPathArrayLastIndex;
 
 var game_screen_width = 800;
 var game_screen_height = 600;
+
+var test_set_score = -1;
 //add---
 
 function create() {
@@ -113,14 +117,16 @@ function update() {
 
     //add---
     var nowPitch = (median(pitchArray));
-    if (nowPitch >= 40 && nowPitch <=1000) {
+    if (lastPitch != -1 && nowPitch >= 40 && nowPitch <=1000) {
         console.log('sig'+sigmoid(nowPitch - lastPitch));
         nextYPosition = nextYPosition - sigmoid(nowPitch - lastPitch);
         //player.position.y = player.position.y - sigmoid(nowPitch - lastPitch);
         lastPitch = nowPitch;
         //p1.y = Math.abs(200-(median(pitchArray)-50))*(600/(250-50));
         //player.position.y = Math.abs(200-(median(pitchArray)-50))*(600/(250-50));
-    }
+    } else if (nowPitch >= 40 && nowPitch <=1000) {
+		lastPitch = nowPitch;
+	}
 
     pencil.position.y = nextYPosition-20;
 
@@ -174,6 +180,50 @@ function update() {
     }
     else{
         game.add.text(200, 200, lose, lose_style);
+		
+		if(test_set_score == -1) {
+			test_set_score = 1;
+			var GameScore = Parse.Object.extend("GameScore");
+			var query = new Parse.Query(GameScore);
+			query.descending("score");
+			query.limit(5); // limit to at most 5 results
+			query.find({
+				success: function(results) {
+					var explainString = "前五名的成績分別為:\n";
+					for (var i = 0; i < results.length; i++) { 
+						var object = results[i];
+						explainString = explainString + (i+1).toString() + ". " + object.get('playerName') + "   " + object.get('score') + "\n";
+					}
+					var person=prompt(explainString + "\n\n你可以輸入名稱紀錄你的分數: " + ground_now.toString(), "default name");
+					if (person!=null)
+					{
+						var gameScore = new GameScore();
+	 
+						gameScore.set("score", ground_now);
+						gameScore.set("playerName", person);
+						
+						gameScore.save(null, {
+							success: function(gameScore) {
+								// Execute any logic that should take place after the object is saved.
+								//alert('New object created with objectId: ' + gameScore.id);
+								alert("紀錄成功");
+								//location.reload();
+							},
+							error: function(gameScore, error) {
+								// Execute any logic that should take place if the save fails.
+								// error is a Parse.Error with an error code and description.
+								alert('抱歉，好像沒有紀錄成功QQ');
+							}
+						});
+					} else {
+						location.reload();
+					}
+				},
+				error: function(error) {
+					//alert(error.description);
+				}
+			});
+		}
     }
 
     if (ground_now == next_ground){
@@ -301,7 +351,7 @@ var confidence = 0;
 var currentPitch = 0;
 
 var pitchArray = [];
-var lastPitch = 100;
+var lastPitch = -1;
 
 window.onload = function() {}
 
@@ -450,7 +500,7 @@ function median(array) {
 }
 
 function sigmoid(t) {
-    return ( (1/(1+Math.exp(-0.5*t))) - 0.5 ) * 30;
+    return ( (1/(1+Math.exp(-0.5*t + 0.00001))) - 0.5 ) * 30;
 }
 
 </script>
